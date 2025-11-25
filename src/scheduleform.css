@@ -1,0 +1,175 @@
+/* Import the Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap');
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+  font-family: 'Roboto', sans-serif; /* Set the font to Roboto */
+  padding: 0 2rem 2rem 2rem;
+}
+
+.form-box {
+  background: white;
+  padding: 2.5rem 75px 100px 2.5rem;
+  border-radius: 2rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 100%;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #444;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+textarea {
+  width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 1rem;
+  padding: 1rem;
+  font-size: 1rem;
+  resize: none;
+  height: 120px;
+  transition: border-color 0.3s;
+  font-family: 'Open Sans', sans-serif; /* Open Sans for text areas */
+}
+
+textarea:focus {
+  border-color: #7c3aed;
+  outline: none;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.3rem;
+}
+
+.media-upload {
+  margin-bottom: 1rem;
+}
+
+.upload-box {
+  border: 2px dashed #d8b4fe;
+  background: #faf5ff;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.3s;
+  color: #7c3aed;
+}
+
+.upload-box:hover {
+  background: #f3e8ff;
+}
+
+.preview-box {
+  position: relative;
+}
+
+.preview-box img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.time-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.time-picker input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  padding-left: 2rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 1rem;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.time-picker input:focus {
+  border-color: #9333ea;
+  outline: none;
+}
+
+button {
+  width: 100%;
+  background: linear-gradient(to right, #8b5cf6, #ec4899);
+  color: white;
+  font-size: 1rem;
+  padding: 1rem;
+  border: none;
+  border-radius: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(to right, #7c3aed, #db2777);
+}
+
+.spinner {
+  border: 3px solid white;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.status {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.status.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
