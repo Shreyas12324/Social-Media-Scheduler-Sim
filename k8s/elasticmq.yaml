@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticmq
+  namespace: sms-dev
+  labels:
+    app: elasticmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticmq
+  template:
+    metadata:
+      labels:
+        app: elasticmq
+    spec:
+      containers:
+        - name: elasticmq
+          image: softwaremill/elasticmq-native:1.4.7
+          ports:
+            - containerPort: 9324
+          volumeMounts:
+            - name: config
+              mountPath: /opt/elasticmq.conf
+              subPath: elasticmq.conf
+      volumes:
+        - name: config
+          configMap:
+            name: elasticmq-config
+            items:
+              - key: elasticmq.conf
+                path: elasticmq.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticmq
+  namespace: sms-dev
+spec:
+  selector:
+    app: elasticmq
+  ports:
+    - port: 9324
+      targetPort: 9324
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticmq-config
+  namespace: sms-dev
+data:
+  elasticmq.conf: |
+    include classpath("application.conf")
+    queues = [
+      {
+        name: "schedules"
+        defaultVisibilityTimeout: 30 seconds
+        delay: 0 seconds
+        receiveMessageWait: 0 seconds
+      }
+    ]

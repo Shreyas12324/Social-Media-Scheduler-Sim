@@ -1,0 +1,125 @@
+name: CI-CD
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["master", "main"]
+
+env:
+  FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
+  K8S_NAMESPACE: sms-dev
+  FRONTEND_API_URL: https://sms.local/api
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ env.FRONTEND_DIR }}
+      - name: Build frontend
+        run: npm run build
+        working-directory: ${{ env.FRONTEND_DIR }}
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ env.BACKEND_DIR }}/package-lock.json
+      - name: Install dependencies
+        run: npm install
+        working-directory: ${{ env.BACKEND_DIR }}
+      - name: Run backend tests
+        run: npm test
+        working-directory: ${{ env.BACKEND_DIR }}
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    outputs:
+      frontend_image: ${{ steps.image_meta.outputs.frontend_image }}
+      backend_image: ${{ steps.image_meta.outputs.backend_image }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: image_meta
+        run: |
+          OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}
+          FRONTEND_IMAGE=ghcr.io/${OWNER_LC}/social-media-scheduler-frontend
+          BACKEND_IMAGE=ghcr.io/${OWNER_LC}/social-media-scheduler-backend
+          echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
+          echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> $GITHUB_ENV
+          echo "frontend_image=$FRONTEND_IMAGE" >> $GITHUB_OUTPUT
+          echo "backend_image=$BACKEND_IMAGE" >> $GITHUB_OUTPUT
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build frontend image
+        run: |
+          docker build \
+            --file Dockerfile.frontend \
+            --build-arg VITE_API_BASE_URL=${{ env.FRONTEND_API_URL }} \
+            --tag ${FRONTEND_IMAGE}:${{ github.sha }} \
+            --tag ${FRONTEND_IMAGE}:latest \
+            .
+      - name: Build backend image
+        run: |
+          docker build \
+            --file backend/Dockerfile \
+            --tag ${BACKEND_IMAGE}:${{ github.sha }} \
+            --tag ${BACKEND_IMAGE}:latest \
+            backend
+      - name: Push images
+        run: |
+          docker push ${FRONTEND_IMAGE}:${{ github.sha }}
+          docker push ${FRONTEND_IMAGE}:latest
+          docker push ${BACKEND_IMAGE}:${{ github.sha }}
+          docker push ${BACKEND_IMAGE}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/master' && secrets.KUBE_CONFIG_DATA != ''
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        run: |
+          if [ -z "$KUBE_CONFIG_DATA" ]; then
+            echo "KUBE_CONFIG_DATA secret not set; skipping deploy" && exit 0
+          fi
+          mkdir -p $HOME/.kube
+          echo "$KUBE_CONFIG_DATA" | base64 --decode > $HOME/.kube/config
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "latest"
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/backend.yaml
+          kubectl apply -f k8s/frontend.yaml
+          kubectl apply -f k8s/ingress.yaml
+      - name: Update images
+        env:
+          FRONTEND_IMAGE: ${{ needs.docker.outputs.frontend_image }}
+          BACKEND_IMAGE: ${{ needs.docker.outputs.backend_image }}
+        run: |
+          kubectl set image deployment/frontend frontend=${FRONTEND_IMAGE}:${{ github.sha }} -n ${{ env.K8S_NAMESPACE }}
+          kubectl set image deployment/backend backend=${BACKEND_IMAGE}:${{ github.sha }} -n ${{ env.K8S_NAMESPACE }}
+*** End Patch

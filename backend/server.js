@@ -26,7 +26,7 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient(); // DynamoDB client
 // Multer temp upload
 const upload = multer({ dest: 'uploads/' });
 
-app.post('/schedule', upload.single('image'), async (req, res) => {
+const handleSchedule = async (req, res) => {
   try {
     const { text, scheduleTime } = req.body;
     const file = req.file;
@@ -76,9 +76,7 @@ app.post('/schedule', upload.single('image'), async (req, res) => {
     };
 
     // Insert the post metadata into DynamoDB
-console.log('Post Params:', postParams);  // Add this line for debugging
-await dynamoDB.put(postParams).promise();
-
+    console.log('Post Params:', postParams);
     await dynamoDB.put(postParams).promise();
 
     // Send response with the text and presigned URL
@@ -92,6 +90,12 @@ await dynamoDB.put(postParams).promise();
     console.error(err);
     res.status(500).json({ message: 'Failed to upload and schedule post', error: err.message });
   }
+};
+
+app.post(['/schedule', '/api/schedule'], upload.single('image'), handleSchedule);
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
 });
 
 app.listen(port, () => {

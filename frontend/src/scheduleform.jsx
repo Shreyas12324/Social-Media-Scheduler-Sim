@@ -3,6 +3,7 @@ import { Image, Send, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import './scheduleform.css';
 
 const ScheduleForm = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
   const [scheduleTime, setScheduleTime] = useState('');
@@ -22,7 +23,7 @@ const ScheduleForm = () => {
     formData.append('scheduleTime', utcDate);
 
     try {
-      const response = await fetch('http://localhost:5000/schedule', {
+      const response = await fetch(`${API_BASE_URL}/schedule`, {
         method: 'POST',
         body: formData,
       });
@@ -99,8 +100,8 @@ const ScheduleForm = () => {
           </button>
 
           {status && (
-            <div className={`status ${status.includes('success') ? 'success' : 'error'}`}>
-              {status.includes('success') ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+            <div className={`status ${status?.toLowerCase().includes('success') ? 'success' : 'error'}`}>
+              {status?.toLowerCase().includes('success') ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
               <span>{status}</span>
             </div>
           )}
