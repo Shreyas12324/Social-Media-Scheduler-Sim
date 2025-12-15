@@ -3,3 +3,7 @@ backend/node_modules/
 backend/uploads/
 .env
 backend/.env
+Social_Media_Scheduler_Project_Report.pdf
+generate_report.py
+kubeconfig-inline.yml
+kubeconfig.yml
